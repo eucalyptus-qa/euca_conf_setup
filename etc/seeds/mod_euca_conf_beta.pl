@@ -543,27 +543,27 @@ sub post_ops_mod_euca_conf_add_java_home{
 	my ($DISTRO, $VERSION, $ARCH, $SOURCE, $ROLL) = @_;
 
 	my $bzr = $ENV{'QA_BZR_DIR'};
-
-        my $euca_conf = "/etc/eucalyptus/eucalyptus.conf";
-        $euca_conf = $ENV{'EUCALYPTUS'} . $euca_conf;
-
+        my $euca_conf = $ENV{'EUCALYPTUS'} . "/etc/eucalyptus/eucalyptus.conf";
 	my $cloud_opts = "";
 
-	set_java_home_env($DISTRO, $VERSION, $ARCH, $SOURCE, $ROLL);
+
+	###
+	###	MAX CORES VALUE					NOTE: needs its own function	050112
+	###
 
 	if( is_max_cores_from_memo() == 1 ){
                 my $max_cores = $ENV{'QA_MEMO_MAX_CORES'};
-		
 		###	BACKWARD COMPATIABLE	111111
 		my_sed( "# MAX_CORES=\".*\"", "MAX_CORES=\"" . $max_cores . "\"", $euca_conf );
 		my_sed( "#MAX_CORES=\".*\"", "MAX_CORES=\"" . $max_cores . "\"", $euca_conf );
 	};
 
+	###
+	###	FIGURE OUT STORAGE-RELATED VARIABLES		NOTE: needs its own function	050112
+	###
 
 	my $ebs_storage_manager = "NO-SAN";
-
 	my $san_provider = "NO-SAN";
-
 	my $disable_iscsi = "N";
 	my $disable_dns = "Y";
 
@@ -577,7 +577,6 @@ sub post_ops_mod_euca_conf_add_java_home{
 
 	if( is_disable_iscsi_from_memo() == 1){
                 $disable_iscsi = $ENV{'QA_MEMO_DISABLE_ISCSI'};
-
 		### BACKWARD COMPATIABLE	111111
 		my_sed( "DISABLE_ISCSI=\".*\"", "DISABLE_ISCSI=\"" . $disable_iscsi . "\"", $euca_conf );
 		my_sed( "#DISABLE_ISCSI=\".*\"", "DISABLE_ISCSI=\"" . $disable_iscsi . "\"", $euca_conf );
@@ -585,43 +584,46 @@ sub post_ops_mod_euca_conf_add_java_home{
 
 	if( is_disable_dns_from_memo() == 1){
                 $disable_dns = $ENV{'QA_MEMO_DISABLE_DNS'};
-
 		### BACKWARD COMPATIABLE	111111
 		my_sed( "DISABLE_DNS=\".*\"", "DISABLE_DNS=\"" . $disable_dns . "\"", $euca_conf );
 		my_sed( "#DISABLE_DNS=\".*\"", "DISABLE_DNS=\"" . $disable_dns . "\"", $euca_conf );
 	};
 
+
+	###
+	###	CLOUD_OPTS assembly		MODIFIED 	050112
+	###
+
+	###	FIGURE OUT JAVA_HOME		MOVED DOWN	050112
+	set_java_home_env($DISTRO, $VERSION, $ARCH, $SOURCE, $ROLL);
+
 	if( $ENV{'EXTRA_OPS'} eq "NO-SAN" || $ebs_storage_manager eq "NO-SAN" ){
-		$cloud_opts = "--java-home=" . $ENV{'JAVA_HOME'};
+		if( $ENV{'JAVA_HOME'} ne "NULL" ){
+			$cloud_opts = "--java-home=" . $ENV{'JAVA_HOME'} . " ";
+		};
 	}else{
-		### temp solution 112410 for PUMA
-#		if( $VERSION eq "LUCID" && ( $SOURCE eq "PACKAGE" || $SOURCE eq "REPO" ) ){
-
-		### Fix for SAN_PROVIDER option		040511
-#		if( $bzr =~ /eee-2\.0/ ){
-#			$cloud_opts = "--java-home=/opt/packages/jdk1.6.0_16/ -Debs.storage.manager=SANManager -Debs.san.provider=NetappProvider";
-#		}else{
-#			$cloud_opts = "--java-home=" . $ENV{'JAVA_HOME'} . " -Debs.storage.manager=SANManager -Debs.san.provider=EquallogicProvider";
-#		};
-
-#		$cloud_opts = "--java-home=" . $ENV{'JAVA_HOME'} . " -Debs.storage.manager=SANManager -Debs.san.provider=" . $san_provider;
-
-		$cloud_opts = "--java-home=" . $ENV{'JAVA_HOME'} . " -Debs.storage.manager=" . $ebs_storage_manager;
-
-		if( !($san_provider eq "NO-SAN") )  {
-			$cloud_opts = $cloud_opts . " -Debs.san.provider=" . $san_provider;
+		if( $ENV{'JAVA_HOME'} ne "NULL" ){
+			$cloud_opts = "--java-home=" . $ENV{'JAVA_HOME'} . " -Debs.storage.manager=" . $ebs_storage_manager . " ";
+		}else{
+			$cloud_opts = "-Debs.storage.manager=" . $ebs_storage_manager . " ";
 		};
 
+		if( !($san_provider eq "NO-SAN") )  {
+			$cloud_opts .= "-Debs.san.provider=" . $san_provider . " ";
+		};
 	};
 
 	if( is_extra_cloud_opts_from_memo() ){
-	    $cloud_opts .= " " . $ENV{'EXTRA_CLOUD_OPTS'};
+	    $cloud_opts .= $ENV{'EXTRA_CLOUD_OPTS'} . " ";
 	};
 
         if( is_walrus_backend_from_memo() && is_ha_walrus() ) {
-	    $cloud_opts .= " -Dwalrus.storage.manager=" . $ENV{'WALRUS_BACKEND'};
+	    $cloud_opts .= "-Dwalrus.storage.manager=" . $ENV{'WALRUS_BACKEND'} . " ";
         };
 
+	chomp($cloud_opts);
+
+	###	APPLY MODIFICATION OF CLOUD_OPTS
 	my_sed( "CLOUD_OPTS=\".*\"", "CLOUD_OPTS=\"" . $cloud_opts . "\"", $euca_conf );
 
 	return 0;
@@ -913,17 +915,18 @@ sub set_java_home_env{
 #	my $source = $ENV{'QA_SOURCE'};
 	my $bzr = $ENV{'QA_BZR_DIR'};
 
-	if( is_use_default_java_home_from_memo() == 1 && $source eq "REPO" ){
+	if( is_java_home_from_memo() == 1 ){						###	MOVED UP	050112	Try to see if JAVA_HOME is set from Request
+		return 0;
+	};
+
+#	if( is_use_default_java_home_from_memo() == 1 && $source eq "REPO" ){		###	REMOVED		050112	on REPO install, always go with DEFAULT
+	if( $source eq "REPO" ){
 		$ENV{'JAVA_HOME'} = get_java_home_path_on_conf();
 		print "\nUsing the configuration's default JAVA_HOME = $ENV{'JAVA_HOME'}\n";
 		return 0;
 	}; 
 
-	if( is_java_home_from_memo() == 1 ){
-		return 0;
-	};
-
-	### temp. sol. to disable sun JDK	080111
+	### temp. sol. to disable sun JDK	080111				### SUN JDK has been depreciated
 	if( $bzr =~ /eee/ && 0 ){
 
 		my $prefix_dir = "/opt/eucalyptus";
@@ -1049,7 +1052,7 @@ sub get_java_home_path_on_conf{
 
 	chomp($temptemp);
 
-	if( $temptemp =~ /\-\-java\-home=(\S+)[\s|"]/){
+	if( $temptemp =~ /\-\-java\-home=(\S+)[\s|"]/m){
 		return $1;
 	};
 
