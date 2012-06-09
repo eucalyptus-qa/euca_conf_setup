@@ -665,6 +665,7 @@ sub post_ops_mod_euca_conf_debian_special_case{
         if( does_It_Have($ROLL, "NC")  ){
 	        if( $DISTRO eq "DEBIAN" || ( $DISTRO eq "UBUNTU" && $VERSION eq "PRECISE" )  ){
 	                my_sed( "USE_VIRTIO_DISK=\"0\"", "USE_VIRTIO_DISK=\"1\"", $euca_conf );
+	                my_sed( "USE_VIRTIO_ROOT=\"0\"", "USE_VIRTIO_ROOT=\"1\"", $euca_conf );		### debian needed ?
         	};
 	};
         return 0;
