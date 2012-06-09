@@ -662,9 +662,11 @@ sub post_ops_mod_euca_conf_debian_special_case{
         my $euca_conf = "/etc/eucalyptus/eucalyptus.conf";
         $euca_conf = $ENV{'EUCALYPTUS'} . $euca_conf;
 
-        if( $DISTRO eq "DEBIAN" && does_It_Have($ROLL, "NC")  ){
-                my_sed( "USE_VIRTIO_DISK=\"0\"", "USE_VIRTIO_DISK=\"1\"", $euca_conf );
-        };
+        if( does_It_Have($ROLL, "NC")  ){
+	        if( $DISTRO eq "DEBIAN" || ( $DISTRO eq "UBUNTU" && $VERSION eq "PRECISE" )  ){
+	                my_sed( "USE_VIRTIO_DISK=\"0\"", "USE_VIRTIO_DISK=\"1\"", $euca_conf );
+        	};
+	};
         return 0;
 };
 
