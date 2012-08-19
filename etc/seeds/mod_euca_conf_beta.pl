@@ -697,7 +697,7 @@ sub read_arguments{
 
 	my $i;
 	for( $i = 4; $i < @my_ARGV; $i++){
-		if( $my_ARGV[$i] eq "NC" || $my_ARGV[$i] eq "CC" || $my_ARGV[$i] eq "CLC" || $my_ARGV[$i] eq "SC" || $my_ARGV[$i] eq "WS" ){
+		if( $my_ARGV[$i] eq "NC" || $my_ARGV[$i] eq "CC" || $my_ARGV[$i] eq "CLC" || $my_ARGV[$i] eq "SC" || $my_ARGV[$i] eq "WS" || $my_ARGV[$i] eq "UI" ){
 			$roll = $roll . "$my_ARGV[$i]" . " ";
 		}elsif( $my_ARGV[$i] eq "DB-DEBUG" ){
 			$ENV{'EXTRA_OPS'} = "DB-DEBUG";
@@ -709,7 +709,7 @@ sub read_arguments{
 		}else{
 			print "ERROR!!\n";
 			print "INVALID ARGUMENT[$i] = $my_ARGV[$i]\n";
-			print "<roll> can only be NC, CC, CLC, SC, or WS\n";
+			print "[TEST_REPORT]\tFAILED: <roll> can only be NC, CC, CLC, SC, WS or UI\n";
 			exit(1); 
 		};
 	};
