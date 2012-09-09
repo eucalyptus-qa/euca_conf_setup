@@ -35,14 +35,15 @@ $ENV{'PRIV_INTERFACE'} = "eth0";
 
 
 ### detect the devices on the machine			--- disbled for R210. All pub and prib interfaces are on eth0 -- 121310
-#detect_interfaces();
+###	REVIVED FOR NEW DATACENTER		090912
+detect_interfaces();
 
 ### below is for multi-cluster setup ... no need for 2 devices if on single-cluster mode
 if( is_it_multi_clusters() == 0 || $ENV{'MY_IP'} eq $ENV{'CLC_IP'} ){			### CLC and CC cannot coexist in multi-cluster mode
 	$ENV{'PRIV_INTERFACE'} = $ENV{'PUB_INTERFACE'};
 }else{
 
-	$ENV{'PRIV_INTERFACE'} = $ENV{'PUB_INTERFACE'};			### for R210 ENV
+	$ENV{'PRIV_INTERFACE'} = $ENV{'PUB_INTERFACE'};					### for R210 ENV
 
 ### NOT NEEDED for R210 Environment
 #	foreach my $machine ( @multi_cluster_test_machines ){
@@ -105,23 +106,41 @@ sub detect_interfaces{
 	my @lines = split( "\n", $scan );
 
 	my $interface = "";
+	my $is_detected = 0;
 
+	print "\n";
+	print "CMD: ifconfig\n";
 	print "\n";
 	foreach my $line (@lines){
 		print $line . "\n";
 		if( $line =~ /^(\w+)\s+Link encap/ ){
 			$interface = $1;
-		}elsif( $line =~ /inet addr:(192\.168\.\d+\.\d+)/) {
-#			print $interface . " got IP " . $1 . "\n";
-			$ENV{'PUB_INTERFACE'} = $interface;
+		};
+
+		if( $is_detected == 0 ){
+			if( $ENV{'QA_PXETYPE'} eq "KICKSTART" ){				### ADDED FOR NEW DATA CENTER		090912
+				if( $line =~ /inet addr:(10\.101\.\d+\.\d+)/) {
+					$ENV{'PUB_INTERFACE'} = $interface;
+					$is_detected = 1;
+				};
+			}else{
+				if( $line =~ /inet addr:(192\.168\.\d+\.\d+)/) {
+					$ENV{'PUB_INTERFACE'} = $interface;
+					$is_detected = 1;
+				};
+			};
 		};
 	};
 
-	if( $ENV{'PUB_INTERFACE'} eq "eth0" || $ENV{'PUB_INTERFACE'} eq "br0" ){
-		$ENV{'PRIV_INTERFACE'} = "eth1";
-	}else{
-		$ENV{'PRIV_INTERFACE'} = "eth0";
-	};
+	print "\n";
+	print "Public Interface: $ENV{'PUB_INTERFACE'}\n";
+	print "\n";
+
+#	if( $ENV{'PUB_INTERFACE'} eq "eth0" || $ENV{'PUB_INTERFACE'} eq "br0" ){
+#		$ENV{'PRIV_INTERFACE'} = "eth1";
+#	}else{
+#		$ENV{'PRIV_INTERFACE'} = "eth0";
+#	};
 
 	return 0;
 };
@@ -886,13 +905,16 @@ sub read_input_file{
 			$ENV{'QA_DISTRO_VER'} = $3;
 			$ENV{'QA_ARCH'} = $4;
 			$ENV{'QA_SOURCE'} = $5;
-		}elsif( $line =~ /^BZR_BRANCH\t(.+)/ ){
+		}elsif( $line =~ /^BZR_BRANCH\s+(.+)/ ){
 			my $temp = $1;
 			chomp($temp);
                         $temp =~ s/\r//g;
 			if( $temp =~ /eucalyptus\/(.+)/ ){
 				$ENV{'QA_BZR_DIR'} = $1; 
 			};
+		}elsif( $line =~ /^PXE_TYPE\s+(.+)/ ){
+                        print ( "\nPXE_TYPE\t$1\n" );
+			$ENV{'QA_PXETYPE'} = $1;
 		}elsif( $line =~ /^MEMO/ ){
 			$is_memo = 1;
 		}elsif( $line =~ /^END_MEMO/ ){
