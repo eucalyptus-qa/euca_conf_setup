@@ -118,16 +118,12 @@ sub detect_interfaces{
 		};
 
 		if( $is_detected == 0 ){
-			if( $ENV{'QA_PXETYPE'} eq "KICKSTART" ){				### ADDED FOR NEW DATA CENTER		090912
-				if( $line =~ /inet addr:(10\.101\.\d+\.\d+)/) {
-					$ENV{'PUB_INTERFACE'} = $interface;
-					$is_detected = 1;
-				};
-			}else{
-				if( $line =~ /inet addr:(192\.168\.\d+\.\d+)/) {
-					$ENV{'PUB_INTERFACE'} = $interface;
-					$is_detected = 1;
-				};
+			if( $line =~ /inet addr:(10\.101\.\d+\.\d+)/) {			### ADDED FOR NEW DATA CENTER           090912
+				$ENV{'PUB_INTERFACE'} = $interface;
+				$is_detected = 1;
+			}elsif( $line =~ /inet addr:(192\.168\.\d+\.\d+)/) {
+				$ENV{'PUB_INTERFACE'} = $interface;
+				$is_detected = 1;
 			};
 		};
 	};
