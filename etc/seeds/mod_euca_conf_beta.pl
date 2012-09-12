@@ -36,7 +36,7 @@ $ENV{'PRIV_INTERFACE'} = "eth0";
 
 ### detect the devices on the machine			--- disbled for R210. All pub and prib interfaces are on eth0 -- 121310
 ###	REVIVED FOR NEW DATACENTER		090912
-#detect_interfaces();
+detect_interfaces();
 
 ### below is for multi-cluster setup ... no need for 2 devices if on single-cluster mode
 if( is_it_multi_clusters() == 0 || $ENV{'MY_IP'} eq $ENV{'CLC_IP'} ){			### CLC and CC cannot coexist in multi-cluster mode
@@ -119,10 +119,12 @@ sub detect_interfaces{
 
 		if( $is_detected == 0 ){
 			if( $line =~ /inet addr:(10\.101\.\d+\.\d+)/) {			### ADDED FOR NEW DATA CENTER           090912
-				$ENV{'PUB_INTERFACE'} = $interface;
+		#		$ENV{'PUB_INTERFACE'} = $interface;
+				$ENV{'PUB_INTERFACE'} = "em1";				### HARDCODED FOR QUICK HACK		091212
 				$is_detected = 1;
 			}elsif( $line =~ /inet addr:(192\.168\.\d+\.\d+)/) {
-				$ENV{'PUB_INTERFACE'} = $interface;
+		#		$ENV{'PUB_INTERFACE'} = $interface;
+				$ENV{'PUB_INTERFACE'} = "eth0";
 				$is_detected = 1;
 			};
 		};
