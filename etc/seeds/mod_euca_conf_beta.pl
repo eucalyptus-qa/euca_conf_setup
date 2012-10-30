@@ -121,7 +121,7 @@ sub detect_interfaces{
 			if( $line =~ /inet addr:(192\.168\.\d+\.\d+)/ ) {
 				$ENV{'PUB_INTERFACE'} = "eth0";
 				$is_detected = 1;
-			}elsif( $line =~ /inet addr:(10\.101\.\d+\.\d+)/ || $line =~ /inet addr:(10\.111\.\d+\.\d+)/ ) {	### ADDED FOR NEW DATA CENTER/10.111 added for qa1 network           101612
+			}elsif( $line =~ /inet addr:(10\.101\.\d+\.\d+)/ || $line =~ /inet addr:(10\.111\.\d+\.\d+)/ || $line =~ /inet addr:(10\.112\.\d+\.\d+)/ ) {	### ADDED FOR NEW DATA CENTER/10.111 added for qa1 network           101612
 				$ENV{'PUB_INTERFACE'} = "em1";			### HARDCODED FOR QUICK HACK		091212
 				$is_detected = 1;
 			};
