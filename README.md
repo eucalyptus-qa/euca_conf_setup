@@ -1,3 +1,34 @@
+
+euca_conf_setup
+===============
+
+## Description
+
+Configure eucalyptus.conf
+
+## Procedure
+
+1. Go through each component, and if its not WINDOWS or VMWARE
+2. Run mod_euca_conf_beta.pl on each component
+3. Set java home path and add it to the cloudopts
+4. For CentOS,OpenSUSE, Fedora, RHEL: Set paths on NC for Bundle,Check-bucket,and Delete bundle
+5. If Debian, set USE_VIRTIO_DISK to 1
+6. Setup Euca_conf for each distro as follows
+7. UBUNTU: 1) set the priv and public interfaces to eth0 2) Iin the NC set the bridge as the public interface for Managed mode and br0 for SYSTEM, Managed-NoVLAN or static 3) For the CC set the DHCPDAEMON to /usr/sbin/dhcpd3 and DHCPUSER to dhcpd
+8. DEBIAN: Do all the same things as step 4 but set the DHCPDAEMON to /usr/sbin/dhcpd and leave the DHCPUSER as root
+9. OPENSUSE: Change the bridge on the NC to the PUBINTERFACE if the component is a NC
+10. SLES: set the VNET_INTERFACE to br0
+11. CENTOS && RHEL: Set teh PUB and PRIV INTERFACES, If ist RHEL6 and its a NC set the VNET_BRIDGE to the PUB_INTERFACE in managed mode or br0 for any other, Set the VIRTIO_DISK VIRTIO_ROOT and VIRTIO_NET flags to 1
+12. For all CCs set teh CLOUDIP to the CLC_IP
+13. In managed network modes set the NETMASK, DNS_SERVER, and ADDRESSESPERNET
+14. Populate the SUBNET and Public IPs from the test config file 2btested.lst
+15. In static Mode set the same parameters in steps 13-14 but use predefined values ie SUBNET=192.168.0.0, NETMASK= 255.255.192.0, BROADCAST=192.168.63.255, ROUTER=192.168.7.1, DNS= 192.168.7.1
+16. If not system mode then comment out VNET_MODE and add in VNET_MODE for the apporiate mode configured in the test
+
+
+<hr><hr><hr>
+
+
 # Eucalyptus Testunit Framework
 
 Eucalyptus Testunit Framework is designed to run a list of test scripts written by Eucalyptus developers.
